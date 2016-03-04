@@ -1,11 +1,10 @@
-Drawing = function(g){
+var mkSVG = require('./mkSVG.js');
 
-  var drawing = {};
+module.exports = function(settings){
 
   // BLOCKS
-
   var Blk = {
-    type: 'block',
+    type: 'block'
   };
   Blk.move = function(x, y){
     for( var i in this.drawing_parts ){
@@ -28,32 +27,52 @@ Drawing = function(g){
   };
 
 
-  var block_active = false;
-  // Create default layer,block container and functions
 
-  // Layers
+  var drawElem = {
+    object: 'drawElem'
+  };
+  drawElem.move = function(x, y){
+    if( typeof this.points != 'undefined' ) {
+      for( var i in this.points ) {
+        this.points[i][0] += x;
+        this.points[i][1] += y;
+      }
+    }
+    return this;
+  };
+  drawElem.rotate = function(deg){
+    this.rotated = deg;
+  };
 
-  var layer_active = false;
+
+
+
+
+
+
+
+
+  /////////////////////////
+  // Drawing prototype
+  var drawing = {
+    mkSVG: mkSVG
+  };
 
   drawing.layer = function(name){ // set current layer
     if( typeof name === 'undefined' ){ // if no layer name given, reset to default
-      layer_active = false;
-    } else if ( ! (name in layer_attr) ) {
-      console.warn('Error: unknown layer "'+name+'", using base');
-      layer_active = 'base' ;
-    } else { // finaly activate requested layer
-      layer_active = name;
+      this.layer_active = false;
+    } else {
+      this.layer_active = name;
     }
     //*/
   };
 
-  var section_active = false;
-
+  // section section
   drawing.section = function(name){ // set current section
     if( typeof name === 'undefined' ){ // if no section name given, reset to default
-      section_active = false;
+      this.section_active = false;
     } else { // finaly activate requested section
-      section_active = name;
+      this.section_active = name;
     }
     //*/
   };
@@ -64,20 +83,20 @@ Drawing = function(g){
       console.log('Error: name required');
     } else {
       var blk;
-      block_active = name;
-      if( settings.drawing.blocks[block_active] !== undefined ){
+      this.block_active = name;
+      if( this.blocks[this.block_active] !== undefined ){
         //console.log('Error: block already exists');
       }
       blk = Object.create(Blk);
-      settings.drawing.blocks[block_active] = blk;
+      this.blocks[this.block_active] = blk;
       return blk;
     }
   };
 
 
   drawing.block_end = function() {
-    var blk = settings.drawing.blocks[block_active];
-    block_active = false;
+    var blk = this.blocks[this.block_active];
+    this.block_active = false;
     return blk;
   };
 
@@ -87,31 +106,17 @@ Drawing = function(g){
 
 
 
-  var SvgElem = {
-    object: 'SvgElem'
-  };
-  SvgElem.move = function(x, y){
-    if( typeof this.points != 'undefined' ) {
-      for( var i in this.points ) {
-        this.points[i][0] += x;
-        this.points[i][1] += y;
-      }
-    }
-    return this;
-  };
-  SvgElem.rotate = function(deg){
-    this.rotated = deg;
-  };
-
-  ///////
+  ////////////////////////////////////////
   // functions for adding drawing_parts
 
   drawing.add = function(type, points, layer_name, attrs) {
-    if( points[0] === undefined ) console.warn("points not deffined", type, points, layer_name );
+    if( points[0] === undefined ) console.warn('points not deffined', type, points, layer_name );
 
-    if( ! layer_name ) { layer_name = layer_active; }
-    if( ! (layer_name in layer_attr) ) {
-      console.warn('Error: Layer "'+ layer_name +'" name not found, using base. ', [type, points, layer_name, attrs] );
+    if( ! layer_name ) {
+      layer_name = this.layer_active;
+    }
+    if( this.settings.later_attr && ! (layer_name in this.settings.later_attr) ) {
+      console.warn('Error: Layer '+ layer_name +' name not found, using base. ', [type, points, layer_name, attrs] );
       layer_name = 'base';
     }
 
@@ -127,10 +132,10 @@ Drawing = function(g){
 
 
 
-    var elem = Object.create(SvgElem);
+    var elem = Object.create(drawElem);
     elem.type = type;
     elem.layer_name = layer_name;
-    elem.section_name = section_active;
+    elem.section_name = this.section_active;
     if( attrs !== undefined ) elem.attrs = attrs;
     if( type === 'line' ) {
       elem.points = points;
@@ -146,12 +151,6 @@ Drawing = function(g){
       elem.y = points[0].y;
     }
 
-    if(block_active) {
-      elem.block_name = block_active;
-      settings.drawing.blocks[block_active].add(elem);
-    } else {
-      this.drawing_parts.push(elem);
-    }
 
 
     // Temp. NaN check
@@ -170,66 +169,71 @@ Drawing = function(g){
       }
     });
 
-    return elem;
+    if(this.block_active) {
+      elem.block_name = this.block_active;
+      this.blocks[this.block_active].add(elem);
+    } else {
+      this.drawing_parts.push(elem);
+    }
+    return this;
   };
 
+
+
+
+
   drawing.line = function(points, layer, attrs){ // (points, [layer])
-    //return add('line', points, layer)
-    var line =  this.add('line', points, layer, attrs);
-    return line;
+    return this.add('line', points, layer, attrs);
   };
 
   drawing.poly = function(points, layer, attrs){ // (points, [layer])
     //return add('poly', points, layer)
-    var poly =  this.add('poly', points, layer, attrs);
-    return poly;
+    return this.add('poly', points, layer, attrs);
   };
 
   drawing.path = function(d, layer, attrs){ // (points, [layer])
-    //return add('poly', points, layer)
-    var path_attrs = attrs || {};
-    path_attrs.d = d;
-    var path =  this.add('path', [[0,0]], layer, path_attrs);
-    return path;
+    // TODO: convert this to something non SVG specific format.
+    return this.add('path', [[0,0]], layer, Object.assign({}, attrs, {
+      d: d
+    }));
   };
 
   drawing.rect = function(loc, size, layer, attrs){
-    var rec = this.add('rect', [loc], layer, attrs);
-    rec.w = size[0];
-
-    rec.h = size[1];
-    return rec;
+    return this.add('rect', [loc], layer, Object.assign({}, attrs, {
+      w: size[0],
+      h: size[1]
+    }));
   };
 
   drawing.circ = function(loc, diameter, layer, attrs){
-    var cir = this.add('circ', [loc], layer, attrs);
-    cir.d = diameter;
-    return cir;
+    return this.add('circ', [loc], layer, Object.assign({}, attrs, {
+      d: diameter
+    }));
   };
 
   drawing.ellipse = function(loc, diameters, layer, attrs){
-    var cir = this.add('ellipse', [loc], layer, attrs);
-    cir.dx = diameters[0];
-    cir.dy = diameters[1];
-    return cir;
+    return this.add('ellipse', [loc], layer, Object.assign({}, attrs, {
+      dx: diameters[0],
+      dy: diameters[1]
+    }));
   };
 
   drawing.text = function(loc, strings, layer, font, attrs){
-    var txt = this.add('text', [loc], layer, attrs);
     if( typeof strings === 'string'){
       strings = [strings];
     }
-    txt.strings = strings;
-    txt.font = font;
-    return txt;
+    return this.add('text', [loc], layer, Object.assign({}, attrs, {
+      strings: strings,
+      font: font
+    }));
   };
 
   drawing.image = function(loc, size, href, layer, attrs){
-    var img = this.add('image', [loc], 'image', attrs);
-    img.w = size[0];
-    img.h = size[1];
-    img.href = href;
-    return img;
+    return this.add('image', [loc], 'image', Object.assign({}, attrs, {
+      w: size[0],
+      h: size[1],
+      href: href
+    }));
   };
 
   drawing.block = function(name) {// set current block
@@ -248,12 +252,12 @@ Drawing = function(g){
     }
 
     // TODO: what if block does not exist? print list of blocks?
-    var blk = Object.create(settings.drawing.blocks[name]);
+    var blk = Object.create(this.blocks[name]);
     blk.x = x;
     blk.y = y;
 
-    if(block_active){
-      settings.drawing.blocks[block_active].add(blk);
+    if(this.block_active){
+      this.blocks[this.block_active].add(blk);
     } else {
       this.drawing_parts.push(blk);
     }
@@ -275,9 +279,17 @@ Drawing = function(g){
 
 
 
-  var page = Object.create(drawing);
-  //console.log(page);
-  page.drawing_parts = [];
-  return page;
+  var d = Object.create(drawing);
+  d.settings = settings;
+  //console.log(d);
+  d.drawing_parts = [];
+  d.layer_active = false;
+  d.layers = {};
+  d.section_active = false;
+  d.block_active = false;
+  d.blocks = {};
+
+
+  return d;
 
 };

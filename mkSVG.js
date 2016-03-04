@@ -1,15 +1,15 @@
-mk_svg = f.mk_svg = function(drawing, settings){
+module.exports = function(){
   //console.log('displaying svg');
   //console.log('drawing_parts: ', drawing_parts);
   //container.empty()
-  var drawing_settings = settings.drawing_settings;
-  var layer_attr = settings.drawing_settings.layer_attr;
-  var fonts = settings.drawing_settings.fonts;
 
-  var svg_document = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
+  var layer_attr = this.settings.layer_attr;
+  var fonts = this.settings.fonts;
+
+  var svg_document = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   //svg_document.setAttribute('width', settings.drawing_settings.size.drawing.w);
   //svg_document.setAttribute('height', settings.drawing_settings.size.drawing.h);
-  var view_box = '0 0 ' + drawing.size.w + ' ' + drawing.size.h + ' ';
+  var view_box = '0 0 ' + this.settings.size.w + ' ' + this.settings.size.h + ' ';
   //svg_document.setAttribute('x', 0);
   //svg_document.setAttribute('y', 0);
   //svg_document.setAttribute('x', 0);
@@ -18,15 +18,8 @@ mk_svg = f.mk_svg = function(drawing, settings){
   svg_document.setAttribute('xmlns','http://www.w3.org/2000/svg');
   svg_document.setAttribute('xmlns:xlink','http://www.w3.org/1999/xlink');
 
-  //svg_document.setAttribute('width', drawing.size.w);
-  if(Meteor.isClient){
-    svg_document.setAttribute('height', state.webpage.window_height * 0.95);
-    //svg_document.setAttribute('width',  state.webpage.window_width  * 0.95);
-  }
-
-
   // Loop through all the drawing contents, call the function below.
-  drawing.drawing_parts.forEach( function(item,id) {
+  this.drawing_parts.forEach( function(item,id) {
     svg_document.appendChild(
       mk_svg_elem(item)
     );
@@ -56,7 +49,7 @@ mk_svg = f.mk_svg = function(drawing, settings){
       //    console.log('error: elem not fully defined', elem)
       //    item.h = 10;
       //}
-      svg_elem = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
+      svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
       svg_elem.setAttribute('width', item.w);
       svg_elem.setAttribute('height', item.h);
       svg_elem.setAttribute('x', x-item.w/2);
@@ -66,8 +59,8 @@ mk_svg = f.mk_svg = function(drawing, settings){
         svg_elem.setAttribute(attr_name, attrs[attr_name]);
       }
       if(item.rotated){
-        //t.setAttribute('transform', "rotate(" + item.rotated + " " + x + " " + y + ")" );
-        svg_elem.setAttribute('transform', "rotate(" + item.rotated + " " + x + " " + y + ")" );
+        //t.setAttribute('transform', 'rotate(' + item.rotated + ' ' + x + ' ' + y + ')' );
+        svg_elem.setAttribute('transform', 'rotate(' + item.rotated + ' ' + x + ' ' + y + ')' );
       }
 
     } else if( item.type === 'line') {
@@ -81,7 +74,7 @@ mk_svg = f.mk_svg = function(drawing, settings){
       });
       //svg.polyline( points2 ).attr( layer_attr[item.layer_name] );
 
-      svg_elem = document.createElementNS("http://www.w3.org/2000/svg", 'polyline');
+      svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
       svg_elem.setAttribute( 'points', points2.join(' ') );
       for( attr_name in attrs ){
         svg_elem.setAttribute(attr_name, attrs[attr_name]);
@@ -98,14 +91,14 @@ mk_svg = f.mk_svg = function(drawing, settings){
       });
       //svg.polyline( points2 ).attr( layer_attr[item.layer_name] );
 
-      svg_elem = document.createElementNS("http://www.w3.org/2000/svg", 'polyline');
+      svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
       svg_elem.setAttribute( 'points', points2.join(' ') );
       for( attr_name in attrs ){
         svg_elem.setAttribute(attr_name, attrs[attr_name]);
       }
     } else if( item.type === 'path') {
 
-      svg_elem = document.createElementNS("http://www.w3.org/2000/svg", 'path');
+      svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       for( attr_name in attrs ){
         svg_elem.setAttribute(attr_name, attrs[attr_name]);
       }
@@ -128,11 +121,11 @@ mk_svg = f.mk_svg = function(drawing, settings){
 
       }
 
-      svg_elem = document.createElementNS("http://www.w3.org/2000/svg", 'text');
-      svg_elem.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space","preserve");
+      svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      svg_elem.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space','preserve');
       if(item.rotated){
-        //t.setAttribute('transform', "rotate(" + item.rotated + " " + x + " " + y + ")" );
-        svg_elem.setAttribute('transform', "rotate(" + item.rotated + " " + x + " " + y + ")" );
+        //t.setAttribute('transform', 'rotate(' + item.rotated + ' ' + x + ' ' + y + ')' );
+        svg_elem.setAttribute('transform', 'rotate(' + item.rotated + ' ' + x + ' ' + y + ')' );
       } else {
         //if( font['text-anchor'] === 'middle' ) y += font['font-size']*1/3;
         y += font['font-size']*1/3;
@@ -156,18 +149,18 @@ mk_svg = f.mk_svg = function(drawing, settings){
         svg_elem.setAttribute( attr_name, font[attr_name] );
       }
       for( attr_name in item.strings ){
-        var tspan = document.createElementNS("http://www.w3.org/2000/svg", 'tspan');
+        var tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
         tspan.setAttribute('dy', dy );
         tspan.setAttribute('x', x);
         tspan.textContent = item.strings[attr_name]; // This does not work in IE
-        //var html_string = '<tspan x="'+x+'" dy="'+dy+'">'+item.strings[attr_name]+'</tspan>';
+        //var html_string = '<tspan x=''+x+'' dy=''+dy+''>'+item.strings[attr_name]+'</tspan>';
         //tspan.outerHTML = html_string;
 
         svg_elem.appendChild(tspan);
       }
 
     } else if( item.type === 'circ') {
-      var svg_elem = document.createElementNS("http://www.w3.org/2000/svg", 'ellipse');
+      var svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
       svg_elem.setAttribute('rx', item.d/2);
       svg_elem.setAttribute('ry', item.d/2);
       svg_elem.setAttribute('cx', x);
@@ -176,7 +169,7 @@ mk_svg = f.mk_svg = function(drawing, settings){
         svg_elem.setAttribute(attr_name, attrs[attr_name]);
       }
     } else if( item.type === 'ellipse') {
-      var svg_elem = document.createElementNS("http://www.w3.org/2000/svg", 'ellipse');
+      var svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
       svg_elem.setAttribute('rx', item.dx/2);
       svg_elem.setAttribute('ry', item.dy/2);
       svg_elem.setAttribute('cx', x);
@@ -187,8 +180,8 @@ mk_svg = f.mk_svg = function(drawing, settings){
 
     } else if( item.type === 'image') {
 
-      //svg_elem = document.createElementNS("http://www.w3.org/2000/svg", 'g');
-      var image = document.createElementNS("http://www.w3.org/2000/svg", 'image');
+      //svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      var image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
       image.setAttribute('x', x);
       image.setAttribute('y', y);
       image.setAttribute('width', item.w);
@@ -208,7 +201,7 @@ mk_svg = f.mk_svg = function(drawing, settings){
     } else if(item.type === 'block') {
       // if it is a block, run this function through each element.
 
-      svg_elem = document.createElementNS("http://www.w3.org/2000/svg", 'g');
+      svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       var transform = 'translate(' + x + ',' + y + ') ';
       if(item.rotated){
         transform += 'rotate(' + item.rotated + ')';
