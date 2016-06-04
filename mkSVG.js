@@ -19,60 +19,52 @@ module.exports = function(){
   svg_document.setAttribute('xmlns:xlink','http://www.w3.org/1999/xlink');
 
   // Loop through all the drawing contents, call the function below.
-  this.drawing_parts.forEach( function(item,id) {
+  this.drawing_parts.forEach( function( geom ) {
     svg_document.appendChild(
-      mk_svg_elem(item)
+      mk_svg_elem(geom)
     );
   });
 
-  function mk_svg_elem(item){
+  function mk_svg_elem(geom){
     var x,y,attr_name;
-    if( typeof item.x !== 'undefined' ) { x = item.x; }
-    if( typeof item.y !== 'undefined' ) { y = item.y; }
+    if( typeof geom.x !== 'undefined' ) { x = geom.x; }
+    if( typeof geom.y !== 'undefined' ) { y = geom.y; }
 
-    var attrs = layer_attr[item.layer_name];
-    if( item.attrs !== undefined){
-      for( attr_name in item.attrs ){
-        attrs[attr_name] = item.attrs[attr_name];
+    var attrs = layer_attr[geom.layer];
+    if( geom.attrs !== undefined){
+      for( attr_name in geom.attrs ){
+        attrs[attr_name] = geom.attrs[attr_name];
       }
     }
+
     var svg_elem;
 
-    if( item.type === 'rect') {
-      //svg.rect( item.w, item.h ).move( x-item.w/2, y-item.h/2 ).attr( layer_attr[item.layer_name] );
-      //console.log('elem:', elem );
-      //if( isNaN(item.w) ) {
-      //    console.log('error: elem not fully defined', elem)
-      //    item.w = 10;
-      //}
-      //if( isNaN(item.h) ) {
-      //    console.log('error: elem not fully defined', elem)
-      //    item.h = 10;
-      //}
+    if( geom.type === 'rect') {
+
       svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      svg_elem.setAttribute('width', item.w);
-      svg_elem.setAttribute('height', item.h);
-      svg_elem.setAttribute('x', x-item.w/2);
-      svg_elem.setAttribute('y', y-item.h/2);
-      //console.log(item.layer_name);
+      svg_elem.setAttribute('width', geom.w);
+      svg_elem.setAttribute('height', geom.h);
+      svg_elem.setAttribute('x', x-geom.w/2);
+      svg_elem.setAttribute('y', y-geom.h/2);
+      //console.log(geom.layer_name);
       for( attr_name in attrs ){
         svg_elem.setAttribute(attr_name, attrs[attr_name]);
       }
-      if(item.rotated){
-        //t.setAttribute('transform', 'rotate(' + item.rotated + ' ' + x + ' ' + y + ')' );
-        svg_elem.setAttribute('transform', 'rotate(' + item.rotated + ' ' + x + ' ' + y + ')' );
+      if(geom.rotated){
+        //t.setAttribute('transform', 'rotate(' + geom.rotated + ' ' + x + ' ' + y + ')' );
+        svg_elem.setAttribute('transform', 'rotate(' + geom.rotated + ' ' + x + ' ' + y + ')' );
       }
 
-    } else if( item.type === 'line') {
+    } else if( geom.type === 'line') {
       var points2 = [];
-      item.points.forEach( function(point){
+      geom.points.forEach( function(point){
         if( ! isNaN(point[0]) && ! isNaN(point[1]) ){
           points2.push([ point[0], point[1] ]);
         } else {
-          console.log('error: elem not fully defined', item);
+          console.log('error: elem not fully defined', geom);
         }
       });
-      //svg.polyline( points2 ).attr( layer_attr[item.layer_name] );
+      //svg.polyline( points2 ).attr( layer_attr[geom.layer_name] );
 
       svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
       svg_elem.setAttribute( 'points', points2.join(' ') );
@@ -80,23 +72,23 @@ module.exports = function(){
         svg_elem.setAttribute(attr_name, attrs[attr_name]);
       }
 
-    } else if( item.type === 'poly') {
+    } else if( geom.type === 'poly') {
       var points2 = [];
-      item.points.forEach( function(point){
+      geom.points.forEach( function(point){
         if( ! isNaN(point[0]) && ! isNaN(point[1]) ){
           points2.push([ point[0], point[1] ]);
         } else {
-          console.log('error: elem not fully defined', item);
+          console.log('error: elem not fully defined', geom);
         }
       });
-      //svg.polyline( points2 ).attr( layer_attr[item.layer_name] );
+      //svg.polyline( points2 ).attr( layer_attr[geom.layer_name] );
 
       svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
       svg_elem.setAttribute( 'points', points2.join(' ') );
       for( attr_name in attrs ){
         svg_elem.setAttribute(attr_name, attrs[attr_name]);
       }
-    } else if( item.type === 'path') {
+    } else if( geom.type === 'path') {
 
       svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       for( attr_name in attrs ){
@@ -106,11 +98,11 @@ module.exports = function(){
       //console.log(svg_elem);
 
 
-    } else if( item.type === 'text') {
-      //var t = svg.text( item.strings ).move( item.points[0][0], item.points[0][1] ).attr( layer_attr[item.layer_name] )
+    } else if( geom.type === 'text') {
+      //var t = svg.text( geom.strings ).move( geom.points[0][0], geom.points[0][1] ).attr( layer_attr[geom.layer_name] )
       var font;
-      if( item.font && fonts[item.font] ){
-        font = fonts[item.font];
+      if( geom.font && fonts[geom.font] ){
+        font = fonts[geom.font];
       } else if(fonts[attrs.font]){
         font = fonts[attrs.font];
       } else {
@@ -123,9 +115,9 @@ module.exports = function(){
 
       svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       svg_elem.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space','preserve');
-      if(item.rotated){
-        //t.setAttribute('transform', 'rotate(' + item.rotated + ' ' + x + ' ' + y + ')' );
-        svg_elem.setAttribute('transform', 'rotate(' + item.rotated + ' ' + x + ' ' + y + ')' );
+      if(geom.rotated){
+        //t.setAttribute('transform', 'rotate(' + geom.rotated + ' ' + x + ' ' + y + ')' );
+        svg_elem.setAttribute('transform', 'rotate(' + geom.rotated + ' ' + x + ' ' + y + ')' );
       } else {
         //if( font['text-anchor'] === 'middle' ) y += font['font-size']*1/3;
         y += font['font-size']*1/3;
@@ -148,46 +140,46 @@ module.exports = function(){
       for( attr_name in font ){
         svg_elem.setAttribute( attr_name, font[attr_name] );
       }
-      for( attr_name in item.strings ){
+      for( attr_name in geom.strings ){
         var tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
         tspan.setAttribute('dy', dy );
         tspan.setAttribute('x', x);
-        tspan.textContent = item.strings[attr_name]; // This does not work in IE
-        //var html_string = '<tspan x=''+x+'' dy=''+dy+''>'+item.strings[attr_name]+'</tspan>';
+        tspan.textContent = geom.strings[attr_name]; // This does not work in IE
+        //var html_string = '<tspan x=''+x+'' dy=''+dy+''>'+geom.strings[attr_name]+'</tspan>';
         //tspan.outerHTML = html_string;
 
         svg_elem.appendChild(tspan);
       }
 
-    } else if( item.type === 'circ') {
+    } else if( geom.type === 'circ') {
       var svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-      svg_elem.setAttribute('rx', item.d/2);
-      svg_elem.setAttribute('ry', item.d/2);
+      svg_elem.setAttribute('rx', geom.d/2);
+      svg_elem.setAttribute('ry', geom.d/2);
       svg_elem.setAttribute('cx', x);
       svg_elem.setAttribute('cy', y);
       for( attr_name in attrs ){
         svg_elem.setAttribute(attr_name, attrs[attr_name]);
       }
-    } else if( item.type === 'ellipse') {
+    } else if( geom.type === 'ellipse') {
       var svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-      svg_elem.setAttribute('rx', item.dx/2);
-      svg_elem.setAttribute('ry', item.dy/2);
+      svg_elem.setAttribute('rx', geom.dx/2);
+      svg_elem.setAttribute('ry', geom.dy/2);
       svg_elem.setAttribute('cx', x);
       svg_elem.setAttribute('cy', y);
       for( attr_name in attrs ){
         svg_elem.setAttribute(attr_name, attrs[attr_name]);
       }
 
-    } else if( item.type === 'image') {
+    } else if( geom.type === 'image') {
 
       //svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       var image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
       image.setAttribute('x', x);
       image.setAttribute('y', y);
-      image.setAttribute('width', item.w);
-      image.setAttribute('height', item.h);
-      image.setAttribute('xlink:href', 'http://spd.fsec.ucf.edu/'+item.href);
-      //image.setAttribute('xlink:href', item.href);
+      image.setAttribute('width', geom.w);
+      image.setAttribute('height', geom.h);
+      image.setAttribute('xlink:href', 'http://spd.fsec.ucf.edu/'+geom.href);
+      //image.setAttribute('xlink:href', geom.href);
       for( attr_name in attrs ){
         image.setAttribute(attr_name, attrs[attr_name]);
       }
@@ -198,16 +190,16 @@ module.exports = function(){
       //svg_elem.appendChild(image);
       svg_elem = image;
 
-    } else if(item.type === 'block') {
+    } else if(geom.type === 'block') {
       // if it is a block, run this function through each element.
 
       svg_elem = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       var transform = 'translate(' + x + ',' + y + ') ';
-      if(item.rotated){
-        transform += 'rotate(' + item.rotated + ')';
+      if(geom.rotated){
+        transform += 'rotate(' + geom.rotated + ')';
       }
       svg_elem.setAttribute('transform', transform);
-      item.drawing_parts.forEach( function(block_item,id){
+      geom.drawing_parts.forEach( function(block_item,id){
         svg_elem.appendChild(
           mk_svg_elem(block_item)
         );
