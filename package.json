@@ -1,5 +1,5 @@
 {
-  "name": "mkDrawing",
+  "name": "mkdrawing",
   "version": "0.0.0",
   "description": "A drawing library that takes inspiration from CAD software.",
   "main": "index.js",
