@@ -7,9 +7,9 @@ module.exports = function(){
   var fonts = this.settings.fonts;
 
   var svg_document = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  //svg_document.setAttribute('width', settings.drawing_settings.size.drawing.w);
-  //svg_document.setAttribute('height', settings.drawing_settings.size.drawing.h);
-  var view_box = '0 0 ' + this.settings.size.w + ' ' + this.settings.size.h + ' ';
+  svg_document.setAttribute('width', this.settings.size.w);
+  svg_document.setAttribute('height', this.settings.size.h);
+  var view_box = '0 0 ' + this.settings.size.w * this.settings.scale + ' ' + this.settings.size.h * this.settings.scale + ' ';
   //svg_document.setAttribute('x', 0);
   //svg_document.setAttribute('y', 0);
   //svg_document.setAttribute('x', 0);
